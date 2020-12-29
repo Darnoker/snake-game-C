@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "*.tcc": "c"
+        "*.tcc": "c",
+        "limits": "c",
+        "type_traits": "c"
     }
 }
