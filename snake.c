@@ -9,13 +9,6 @@
 
 #define rows 20
 #define columns 60
-int field[rows][columns];
-bool game = true;
-int var;
-int direction = 'd';
-int score = 0;
-int highscore = 0;
-FILE *file;
 
 typedef struct
 {
@@ -33,42 +26,49 @@ typedef struct
     int y;
     int number;
 
-} TFood;
+} Tfood;
 
-Tsnake snake;
-TFood food;
-
-void gameScreen();
-void snakeInit();
+void gameScreen(int field[][columns], int *, int *, Tsnake *);
+void snakeInit(Tsnake *, int field[][columns], int *);
 void resetScreen();
-void foodPrint();
-void movement();
+void foodPrint(Tfood *, int field[][columns]);
+void movement(int *, int *, Tsnake *, int field[][columns], Tfood *, int *, int *, bool *);
 int getch_noblock();
-void tailRemover();
-void checkFood();
-void checkBody();
-void gameOver();
+void tailRemover(Tsnake *, int field[][columns]);
+void gameOver(int *, bool *, int *);
 
 int main()
 {
-    snakeInit();
+    bool game = true;
+    Tsnake snake;
+    Tfood food;
+    food.number = 0;
+    int field[rows][columns];
+    int score = 0;
+    int highscore = 0;
+    int var;
+    int direction = 'd';
+
+    snakeInit(&snake, field, &highscore);
     while (game)
     {
-        gameScreen();
+        gameScreen(field, &score, &highscore, &snake);
         resetScreen();
-        foodPrint();
-        movement();
-        tailRemover();
+        foodPrint(&food, field);
+        movement(&var, &direction, &snake, field, &food, &score, &highscore, &game);
+        tailRemover(&snake, field);
         Sleep(32);
     }
     return 0;
 }
 
-void snakeInit() //Inicjalizacja Snake'a
+void snakeInit(Tsnake *snake, int field[][columns], int *highscore) //Inicjalizacja Snake'a
 {
+    FILE *file;
     file = fopen("high-score.txt", "r");
-    fscanf(file,"%d", &highscore);
+    fscanf(file, "%d", &*highscore);
     fclose(file);
+
     for (size_t row = 0; row < rows; row++)
     {
         for (size_t column = 0; column < columns; column++)
@@ -76,20 +76,20 @@ void snakeInit() //Inicjalizacja Snake'a
             field[row][column] = 0;
         }
     }
-    snake.x = rows / 2;
-    snake.y = columns / 2;
-    snake.head = 5;
-    snake.tail = 1;
-    snake.Gy = snake.y;
+    snake->x = rows / 2;
+    snake->y = columns / 2;
+    snake->head = 5;
+    snake->tail = 1;
+    snake->Gy = snake->y;
 
-    for (size_t i = 0; i < snake.head; i++)
+    for (size_t i = 0; i < snake->head; i++)
     {
-        snake.Gy++;
-        field[snake.x][snake.Gy - snake.head] = i + 1;
+        snake->Gy++;
+        field[snake->x][snake->Gy - snake->head] = i + 1;
     }
 }
 
-void gameScreen()
+void gameScreen(int field[][columns], int *score, int *highscore, Tsnake *snake)
 {
     for (size_t column = 0; column <= columns + 1; column++) // Narysowanie góry planszy
     {
@@ -101,7 +101,7 @@ void gameScreen()
             printf("%c", 205);
     }
 
-    printf("Wynik: %d |  Najwyszy wynik: %d", score, highscore); 
+    printf("Wynik: %d |  Najwyszy wynik: %d", *score, *highscore);
     printf("\n");
 
     for (size_t row = 0; row < rows; row++) //Narysowanie boków planszy
@@ -111,9 +111,9 @@ void gameScreen()
         {
             if (field[row][column] == 0)
                 printf(" ");
-            if (field[row][column] > 0 && field[row][column] != snake.head)
+            if (field[row][column] > 0 && field[row][column] != snake->head)
                 printf("%c", 176);
-            if (field[row][column] == snake.head)
+            if (field[row][column] == snake->head)
                 printf("%c", 178);
             if (field[row][column] == -1)
                 printf("%c", 15);
@@ -141,67 +141,97 @@ void resetScreen() //Odswiezanie ekranu gry
     position.Y = 0;
     SetConsoleCursorPosition(hOut, position);
 }
-void foodPrint() //Rysowanie jedzenia na ekranie
+
+void foodPrint(Tfood *food, int field[][columns]) //Rysowanie jedzenia na ekranie
 {
     srand(time(0));
-    food.x = (rand() % (rows - 2)) + 1;
-    food.y = (rand() % (columns - 2)) + 1;
+    food->x = (rand() % (rows - 2)) + 1;
+    food->y = (rand() % (columns - 2)) + 1;
 
-    if (food.number == 0 && field[food.x][food.y] == 0)
+    if (food->number == 0 && field[food->x][food->y] == 0)
     {
-        field[food.x][food.y] = -1;
-        food.number = 1;
+        field[food->x][food->y] = -1;
+        food->number = 1;
     }
 }
 
-void movement() //Poruszanie sie gracza
+void movement(int *var, int *direction, Tsnake *snake, int field[][columns], Tfood *food, int *score, int *highscore, bool *game) //Poruszanie sie gracza
 {
-    var = getch_noblock();
-    var = tolower(var);
-    if (((var == 'd' || var == 'a') || (var == 'w' || var == 's')) && (abs(direction - var) > 5)) //sprawdzanie wartosci ASCII pomiedzy wcisnietymi klawiszami
-        direction = var;
 
-    switch (direction)
+    *var = getch_noblock();
+    *var = tolower(*var);
+
+    if (((*var == 'd' || *var == 'a') || (*var == 'w' || *var == 's')) && (abs(*direction - *var) > 5)) //sprawdzanie wartosci ASCII pomiedzy wcisnietymi klawiszami
+        *direction = *var;
+
+    if ((char)*direction == 'd')
     {
-    case 'd':
-        snake.y++;
-        checkBody();
-        if (snake.y == columns - 1)
-            snake.y = 0;
-        checkFood();
-        snake.head++;
-        field[snake.x][snake.y] = snake.head;
-        break;
+        snake->y++;
+        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+            gameOver(score, game, highscore);
+        if (snake->y == columns - 1)
+            snake->y = 0;
+        if (field[snake->x][snake->y] == -1)
+        {
+            food->number = 0;
+            snake->tail -= 2;
+            *score += 1;
+        }
+        snake->head++;
+        field[snake->x][snake->y] = snake->head;
+    }
 
-    case 'a':
-        snake.y--;
-        checkBody();
-        if (snake.y == 0)
-            snake.y = columns - 1;
-        checkFood();
-        snake.head++;
-        field[snake.x][snake.y] = snake.head;
-        break;
+    if ((char)*direction == 'a')
+    {
+        snake->y--;
+        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+            gameOver(score, game, highscore);
 
-    case 'w':
-        snake.x--;
-        checkBody();
-        if (snake.x == -1)
-            snake.x = rows - 1;
-        checkFood();
-        snake.head++;
-        field[snake.x][snake.y] = snake.head;
-        break;
+        if (snake->y == 0)
+            snake->y = columns - 1;
 
-    case 's':
-        snake.x++;
-        checkBody();
-        if (snake.x == rows - 1)
-            snake.x = 0;
-        checkFood();
-        snake.head++;
-        field[snake.x][snake.y] = snake.head;
-        break;
+        if (field[snake->x][snake->y] == -1)
+        {
+            food->number = 0;
+            snake->tail -= 2;
+            *score += 1;
+        }
+        snake->head++;
+        field[snake->x][snake->y] = snake->head;
+    }
+
+    if ((char)*direction == 'w')
+    {
+        snake->x--;
+        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+            gameOver(score, game, highscore);
+        if (snake->x == -1)
+            snake->x = rows - 1;
+        if (field[snake->x][snake->y] == -1)
+        {
+            food->number = 0;
+            snake->tail -= 2;
+            *score += 1;
+        }
+        snake->head++;
+        field[snake->x][snake->y] = snake->head;
+    }
+
+    if ((char)*direction == 's')
+    {
+        snake->x++;
+        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+            gameOver(score, game, highscore);
+        if (snake->x == rows - 1)
+            snake->x = 0;
+        if (field[snake->x][snake->y] == -1)
+        {
+            food->number = 0;
+            snake->tail -= 2;
+            *score += 1;
+        }
+        snake->head++;
+        field[snake->x][snake->y] = snake->head;
     }
 }
 int getch_noblock()
@@ -212,56 +242,47 @@ int getch_noblock()
         return -1;
 }
 
-void tailRemover()
+void tailRemover(Tsnake *snake, int field[][columns])
 {
     for (size_t i = 0; i < rows; i++)
     {
         for (size_t j = 0; j < columns; j++)
         {
-            if (field[i][j] == snake.tail)
+            if (field[i][j] == snake->tail)
             {
                 field[i][j] = 0;
             }
         }
     }
-    snake.tail++;
+    snake->tail++;
 }
-void checkFood()
-{
-    if (field[snake.x][snake.y] == -1)
-    {
-        food.number = 0;
-        snake.tail -= 2;
-        score += 1;
 
-    }   
-}
-void checkBody()
+void gameOver(int *score, bool *game, int *highscorek)
 {
-    if (field[snake.x][snake.y] != 0 && field[snake.x][snake.y] != -1)
-        gameOver();
-}
-void gameOver()
-{
+    FILE *file;
+    file = fopen("high-score.txt", "r");
+    fscanf(file, "%d", &*highscorek);
+    fclose(file);
+
     printf("\a");
     Sleep(1500);
     system("cls");
 
     printf("      GAME OVER !!!!!!!!!!!!\n");
 
-    game = false;
+    *game = false;
 
-    if (score > highscore)
+    if (*score > *highscorek)
     {
-        printf("Nowy najwyzszy wynik! %d\n", score);
+        printf("Nowy najwyzszy wynik! %d\n", *score);
         file = fopen("high-score.txt", "w");
-        fprintf(file, "\n%d", score);
+        fprintf(file, "\n%d", *score);
         fclose(file);
     }
     else
     {
-        printf("Wynik: %d\n", score);
+        printf("Wynik: %d\n", *score);
     }
-    
+
     system("pause");
 }
