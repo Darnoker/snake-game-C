@@ -16,7 +16,7 @@ typedef struct
     int y;
     int head;
     int tail;
-    int Gy;
+    int Gx;
 
 } Tsnake;
 
@@ -76,16 +76,16 @@ void snakeInit(Tsnake *snake, int field[][columns], int *highscore) //Inicjaliza
             field[row][column] = 0;
         }
     }
-    snake->x = rows / 2;
-    snake->y = columns / 2;
+    snake->x = columns / 2;
+    snake->y = rows / 2;
     snake->head = 5;
     snake->tail = 1;
-    snake->Gy = snake->y;
+    snake->Gx = snake->x;
 
     for (size_t i = 0; i < snake->head; i++)
     {
-        snake->Gy++;
-        field[snake->x][snake->Gy - snake->head] = i + 1;
+        snake->Gx++;
+        field[snake->y][snake->Gx - snake->head] = i + 1;
     }
 }
 
@@ -145,12 +145,12 @@ void resetScreen() //Odswiezanie ekranu gry
 void foodPrint(Tfood *food, int field[][columns]) //Rysowanie jedzenia na ekranie
 {
     srand(time(0));
-    food->x = (rand() % (rows - 2)) + 1;
-    food->y = (rand() % (columns - 2)) + 1;
+    food->y = (rand() % (rows - 2)) + 1;
+    food->x = (rand() % (columns - 2)) + 1;
 
-    if (food->number == 0 && field[food->x][food->y] == 0)
+    if (food->number == 0 && field[food->y][food->x] == 0)
     {
-        field[food->x][food->y] = -1;
+        field[food->y][food->x] = -1;
         food->number = 1;
     }
 }
@@ -166,72 +166,72 @@ void movement(int *var, int *direction, Tsnake *snake, int field[][columns], Tfo
 
     if ((char)*direction == 'd')
     {
-        snake->y++;
-        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+        snake->x++;
+        if (field[snake->y][snake->x] != 0 && field[snake->y][snake->x] != -1)
             gameOver(score, game, highscore);
-        if (snake->y == columns - 1)
-            snake->y = 0;
-        if (field[snake->x][snake->y] == -1)
+        if (snake->x == columns - 1)
+            snake->x = 0;
+        if (field[snake->y][snake->x] == -1)
         {
             food->number = 0;
             snake->tail -= 2;
             *score += 1;
         }
         snake->head++;
-        field[snake->x][snake->y] = snake->head;
+        field[snake->y][snake->x] = snake->head;
     }
 
     if ((char)*direction == 'a')
     {
-        snake->y--;
-        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+        snake->x--;
+        if (field[snake->y][snake->x] != 0 && field[snake->y][snake->x] != -1)
             gameOver(score, game, highscore);
 
-        if (snake->y == 0)
-            snake->y = columns - 1;
+        if (snake->x == 0)
+            snake->x = columns - 1;
 
-        if (field[snake->x][snake->y] == -1)
+        if (field[snake->y][snake->x] == -1)
         {
             food->number = 0;
             snake->tail -= 2;
             *score += 1;
         }
         snake->head++;
-        field[snake->x][snake->y] = snake->head;
+        field[snake->y][snake->x] = snake->head;
     }
 
     if ((char)*direction == 'w')
     {
-        snake->x--;
-        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+        snake->y--;
+        if (field[snake->y][snake->x] != 0 && field[snake->y][snake->x] != -1)
             gameOver(score, game, highscore);
-        if (snake->x == -1)
-            snake->x = rows - 1;
-        if (field[snake->x][snake->y] == -1)
+        if (snake->y == -1)
+            snake->y = rows - 1;
+        if (field[snake->y][snake->x] == -1)
         {
             food->number = 0;
             snake->tail -= 2;
             *score += 1;
         }
         snake->head++;
-        field[snake->x][snake->y] = snake->head;
+        field[snake->y][snake->x] = snake->head;
     }
 
     if ((char)*direction == 's')
     {
-        snake->x++;
-        if (field[snake->x][snake->y] != 0 && field[snake->x][snake->y] != -1)
+        snake->y++;
+        if (field[snake->y][snake->x] != 0 && field[snake->y][snake->x] != -1)
             gameOver(score, game, highscore);
-        if (snake->x == rows - 1)
-            snake->x = 0;
-        if (field[snake->x][snake->y] == -1)
+        if (snake->y == rows - 1)
+            snake->y = 0;
+        if (field[snake->y][snake->x] == -1)
         {
             food->number = 0;
             snake->tail -= 2;
             *score += 1;
         }
         snake->head++;
-        field[snake->x][snake->y] = snake->head;
+        field[snake->y][snake->x] = snake->head;
     }
 }
 int getch_noblock()
