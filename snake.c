@@ -35,8 +35,6 @@ void foodPrint(Tfood *, int field[][columns]);
 void movement(int *, int *, Tsnake *, int field[][columns], Tfood *, int *, int *, bool *);
 int getch_noblock();
 void tailRemover(Tsnake *, int field[][columns]);
-void checkFood(int field[][columns], Tsnake *, Tfood *, int **);
-void checkBody(int field[][columns], Tsnake *, int *, bool);
 void gameOver(int *, bool *, int *);
 
 int main()
