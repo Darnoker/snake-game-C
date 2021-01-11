@@ -29,6 +29,7 @@ int main()
         int deltaTime = (t2 - t1) * 0.0001;
         gameScreen(field, &score, &highscore, &snake);
         resetScreen();
+        hidecursor();
         foodPrint(&food, field);
         movement(&var, &direction, &snake, field, &food, &score, &highscore, &game);
         tailManager(&snake, field);

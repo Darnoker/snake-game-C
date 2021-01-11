@@ -15,7 +15,7 @@ void snakeInit(Tsnake *snake, int field[][columns], int *highscore) //Inicjaliza
     fscanf(file, "%d", &*highscore);
     fclose(file);
 
-    for (size_t row = 0; row < rows; row++)
+    for (size_t row = 0; row < rows; row++)//wypełnienie tablicy zerami
     {
         for (size_t column = 0; column < columns; column++)
         {
@@ -28,7 +28,7 @@ void snakeInit(Tsnake *snake, int field[][columns], int *highscore) //Inicjaliza
     snake->tail = 1;
     snake->Gx = snake->x;
 
-    for (size_t i = 0; i < snake->head; i++)
+    for (size_t i = 0; i < snake->head; i++)//ustawienie snake'a wartosciami od 1 do 5 (5 to glowa)
     {
         snake->Gx++;
         field[snake->y][snake->Gx - snake->head] = i + 1;
@@ -55,13 +55,13 @@ void gameScreen(int field[][columns], int *score, int *highscore, Tsnake *snake)
         printf("%c", 186);
         for (size_t column = 0; column < columns; column++) //Rysownaie boków i snake'a
         {
-            if (field[row][column] == 0)
+            if (field[row][column] == 0) 
                 printf(" ");
-            if (field[row][column] > 0 && field[row][column] != snake->head)
+            if (field[row][column] > 0 && field[row][column] != snake->head)//Narysowanie ciala snake'a
                 printf("%c", 176);
-            if (field[row][column] == snake->head)
+            if (field[row][column] == snake->head)//Narysowanie glowy snake'a
                 printf("%c", 178);
-            if (field[row][column] == -1)
+            if (field[row][column] == -1)//Narysowanie jedzenia
                 printf("%c", 15);
             if (column == columns - 1)
                 printf("%c\n", 186);
@@ -88,6 +88,15 @@ void resetScreen() //Odswiezanie ekranu gry
     SetConsoleCursorPosition(hOut, position);
 }
 
+void hidecursor()
+{
+   HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+   CONSOLE_CURSOR_INFO info;
+   info.dwSize = 100;
+   info.bVisible = FALSE;
+   SetConsoleCursorInfo(consoleHandle, &info);
+}
+
 void foodPrint(Tfood *food, int field[][columns]) //Rysowanie jedzenia na ekranie
 {
     srand(time(0));
@@ -104,7 +113,7 @@ void foodPrint(Tfood *food, int field[][columns]) //Rysowanie jedzenia na ekrani
 void movement(int *var, int *direction, Tsnake *snake, int field[][columns], Tfood *food, int *score, int *highscore, bool *game) //Poruszanie sie gracza
 {
 
-    *var = getch_noblock();
+    *var = getKey();
     *var = tolower(*var);
 
     if (((*var == 'd' || *var == 'a') || (*var == 'w' || *var == 's')) && (abs(*direction - *var) > 5)) //sprawdzanie wartosci ASCII pomiedzy wcisnietymi klawiszami
@@ -180,7 +189,7 @@ void movement(int *var, int *direction, Tsnake *snake, int field[][columns], Tfo
         field[snake->y][snake->x] = snake->head;
     }
 }
-int getch_noblock()
+int getKey()
 { //Funkcja pobierajaca klawisz
     if (_kbhit())
         return getch();

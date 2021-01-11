@@ -27,6 +27,7 @@ void snakeInit(Tsnake *, int field[][columns], int *);
 void resetScreen();
 void foodPrint(Tfood *, int field[][columns]);
 void movement(int *, int *, Tsnake *, int field[][columns], Tfood *, int *, int *, bool *);
-int getch_noblock();
+int getKey();
 void tailManager(Tsnake *, int field[][columns]);
 void gameOver(int *, bool *, int *);
+void hidecursor();
